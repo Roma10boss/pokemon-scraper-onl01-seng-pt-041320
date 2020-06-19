@@ -18,12 +18,16 @@ class Pokemon
   end
 
   def self.find(id, db)
-    sql = <<-SQL
-      SELECT * FROM pokemon WHERE id = (?);
-    SQL
-    pokemon = db.execute(sql, [id]).flatten
-    Pokemon.new(id, pokemon[1], pokemon[2], pokemon[3], db )
-  end
+      statement = db.prepare("SELECT * FROM pokemon WHERE id = ?")
+      result_set = statement.execute(id)
+  
+      results = result_set.collect do |row|
+        pokemon = Pokemon.new(name: row[1], type: row[2], db: db, id: id)
+        pokemon.hp = row[3]
+        pokemon
+      end
+      results[0]
+    end
 
   def alter_hp(new_hp)
     sql = <<-SQL
